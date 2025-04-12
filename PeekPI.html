@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PeekPI</title>
+    <style>
+        :root {
+            --primary-color: #2962FF;
+            --primary-light: #768fff;
+            --primary-dark: #0039CB;
+            --accent-color: #FF6E00;
+            --dark-bg: #121212;
+            --dark-surface: #1E1E1E;
+            --dark-card: #252525;
+            --text-primary: #EEEEEE;
+            --text-secondary: #AAAAAA;
+            --border-color: #333333;
+            --success-color: #00E676;
+            --error-color: #FF1744;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--dark-bg);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .app-name {
+            font-size: 24px;
+            font-weight: 500;
+            margin-bottom: 20px;
+            color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .app-name svg {
+            height: 24px;
+            width: 24px;
+        }
+
+        .panel {
+            background-color: var(--dark-card);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+        }
+
+        .url-panel {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .method-selector {
+            width: 120px;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            font-weight: bold;
+            background-color: var(--dark-surface);
+            color: var(--text-primary);
+            cursor: pointer;
+        }
+
+        .endpoint-type {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .endpoint-radio {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Custom radio button styling */
+        .endpoint-radio input[type="radio"] {
+            appearance: none;
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            border: 2px solid var(--border-color);
+            border-radius: 50%;
+            outline: none;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .endpoint-radio input[type="radio"]:checked {
+            border-color: var(--accent-color);
+        }
+
+        .endpoint-radio input[type="radio"]:checked::before {
+            content: "";
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: var(--accent-color);
+        }
+
+        .endpoint-radio label {
+            cursor: pointer;
+        }
+
+        .endpoint-input {
+            flex-grow: 1;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            background-color: var(--dark-surface);
+            color: var(--text-primary);
+        }
+
+        .send-btn {
+            padding: 10px 20px;
+            background-color: var(--primary-color);
+            color: var(--text-primary);
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.2s;
+        }
+
+        .send-btn:hover {
+            background-color: var(--primary-light);
+        }
+
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 15px;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            color: var(--text-secondary);
+            transition: all 0.2s;
+        }
+
+        .tab:hover {
+            color: var(--text-primary);
+        }
+
+        .tab.active {
+            border-bottom: 2px solid var(--primary-color);
+            color: var(--primary-color);
+            font-weight: bold;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .params-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .params-table th, .params-table td {
+            padding: 10px;
+            border: 1px solid var(--border-color);
+        }
+
+        .params-table th {
+            background-color: var(--dark-surface);
+        }
+
+        .params-table input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid var(--border-color);
+            border-radius: 3px;
+            background-color: var(--dark-surface);
+            color: var(--text-primary);
+        }
+
+        .add-row {
+            margin-top: 10px;
+            padding: 5px 10px;
+            background-color: var(--dark-surface);
+            border: 1px solid var(--border-color);
+            border-radius: 3px;
+            cursor: pointer;
+            color: var(--text-primary);
+        }
+
+        .add-row:hover {
+            background-color: var(--border-color);
+        }
+
+        .remove-row {
+            padding: 5px 10px;
+            background-color: transparent;
+            border: 1px solid var(--border-color);
+            border-radius: 3px;
+            cursor: pointer;
+            color: var(--error-color);
+        }
+
+        .remove-row:hover {
+            background-color: rgba(255, 23, 68, 0.1);
+        }
+
+        .response-panel {
+            min-height: 300px;
+        }
+
+        .response-panel h2 {
+            margin-bottom: 15px;
+            font-weight: 500;
+            color: var(--primary-color);
+        }
+
+        .response-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding: 10px;
+            background-color: var(--dark-surface);
+            border-radius: 5px;
+        }
+
+        .status {
+            font-weight: bold;
+        }
+
+        .status.success {
+            color: var(--success-color);
+        }
+
+        .status.error {
+            color: var(--error-color);
+        }
+
+        .response-body {
+            background-color: var(--dark-surface);
+            color: var(--text-primary);
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            min-height: 200px;
+            white-space: pre-wrap;
+            font-family: 'Consolas', 'Monaco', monospace;
+        }
+
+        .cookies-container {
+            margin-top: 15px;
+        }
+
+        .cookie-item {
+            padding: 8px;
+            background-color: var(--dark-surface);
+            margin-bottom: 5px;
+            border-radius: 3px;
+        }
+
+        .hidden {
+            display: none;
+        }
+        
+        .port-input {
+            width: 100px;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            background-color: var(--dark-surface);
+            color: var(--text-primary);
+        }
+        
+        #request-body {
+            width: 100%; 
+            height: 200px; 
+            padding: 10px; 
+            margin-top: 10px;
+            background-color: var(--dark-surface);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            font-family: 'Consolas', 'Monaco', monospace;
+        }
+        
+        @media (max-width: 768px) {
+            .url-panel {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .endpoint-type {
+                width: 100%;
+            }
+            
+            .endpoint-input {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="app-name">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M8 12h8"/>
+                <path d="M12 8v8"/>
+            </svg>
+            API Explorer
+        </div>
+        
+        <div class="panel">
+            <div class="url-panel">
+                <select id="request-method" class="method-selector">
+                    <option value="GET">GET</option>
+                    <option value="POST">POST</option>
+                    <option value="PUT">PUT</option>
+                    <option value="DELETE">DELETE</option>
+                    <option value="PATCH">PATCH</option>
+                    <option value="HEAD">HEAD</option>
+                    <option value="OPTIONS">OPTIONS</option>
+                </select>
+                
+                <div class="endpoint-type">
+                    <div class="endpoint-radio">
+                        <input type="radio" id="localhost" name="endpoint-type" value="localhost" checked>
+                        <label for="localhost">Localhost</label>
+                    </div>
+                    <div id="port-container">
+                        <input type="number" id="port-number" class="port-input" placeholder="Port" value="3000">
+                    </div>
+                    
+                    <div class="endpoint-radio">
+                        <input type="radio" id="custom-url" name="endpoint-type" value="custom">
+                        <label for="custom-url">Custom URL</label>
+                    </div>
+                    <div id="url-container" class="hidden">
+                        <input type="text" id="custom-url-input" class="endpoint-input" placeholder="https://example.com/api">
+                    </div>
+                </div>
+                
+                <button id="send-request" class="send-btn">Send</button>
+            </div>
+        </div>
+        
+        <div class="panel">
+            <div class="tabs">
+                <div class="tab active" data-tab="params">Params</div>
+                <div class="tab" data-tab="headers">Headers</div>
+                <div class="tab" data-tab="body">Body</div>
+            </div>
+            
+            <div class="tab-content active" id="params-content">
+                <table class="params-table" id="params-table">
+                    <thead>
+                        <tr>
+                            <th>Key</th>
+                            <th>Value</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><input type="text" class="param-key" placeholder="key"></td>
+                            <td><input type="text" class="param-value" placeholder="value"></td>
+                            <td><button class="remove-row">Remove</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <button class="add-row" id="add-param">Add Parameter</button>
+            </div>
+            
+            <div class="tab-content" id="headers-content">
+                <table class="params-table" id="headers-table">
+                    <thead>
+                        <tr>
+                            <th>Key</th>
+                            <th>Value</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><input type="text" class="header-key" placeholder="Content-Type"></td>
+                            <td><input type="text" class="header-value" placeholder="application/json"></td>
+                            <td><button class="remove-row">Remove</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <button class="add-row" id="add-header">Add Header</button>
+            </div>
+            
+            <div class="tab-content" id="body-content">
+                <textarea id="request-body" placeholder="Request body (JSON, form data, etc.)"></textarea>
+            </div>
+        </div>
+        
+        <div class="panel response-panel">
+            <h2>Response</h2>
+            <div id="response-container">
+                <div class="response-info">
+                    <div class="status" id="status">No request sent yet</div>
+                    <div class="time" id="time"></div>
+                </div>
+                <div class="tabs">
+                    <div class="tab active" data-tab="response-body">Body</div>
+                    <div class="tab" data-tab="response-headers">Headers</div>
+                    <div class="tab" data-tab="cookies">Cookies</div>
+                    <div class="tab" data-tab="raw-html">HTML</div>
+                </div>
+                <div class="tab-content active" id="response-body-content">
+                    <div class="response-body" id="response-body-container">No response yet</div>
+                </div>
+                <div class="tab-content" id="response-headers-content">
+                    <div class="response-body" id="response-headers-container">No response yet</div>
+                </div>
+                <div class="tab-content" id="cookies-content">
+                    <div id="cookies-container">No cookies found</div>
+                </div>
+                <div class="tab-content" id="raw-html-content">
+                    <div class="response-body" id="raw-html-container">No HTML content</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Tab switching functionality
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    // Get the parent tabs container
+                    const parent = this.parentElement;
+                    
+                    // Remove active class from all siblings
+                    parent.querySelectorAll('.tab').forEach(t => {
+                        t.classList.remove('active');
+                    });
+                    
+                    // Add active class to clicked tab
+                    this.classList.add('active');
+                    
+                    // Find the corresponding content
+                    const tabName = this.getAttribute('data-tab');
+                    const tabContent = document.getElementById(tabName + '-content');
+                    
+                    if (tabContent) {
+                        // Hide all tab contents in the same group
+                        const contents = document.querySelectorAll('.tab-content');
+                        contents.forEach(content => {
+                            if (content.parentElement === tabContent.parentElement) {
+                                content.classList.remove('active');
+                            }
+                        });
+                        
+                        // Show the selected tab content
+                        tabContent.classList.add('active');
+                    }
+                });
+            });
+            
+            // Endpoint type toggling
+            const localhostRadio = document.getElementById('localhost');
+            const customUrlRadio = document.getElementById('custom-url');
+            const portContainer = document.getElementById('port-container');
+            const urlContainer = document.getElementById('url-container');
+            
+            localhostRadio.addEventListener('change', function() {
+                if (this.checked) {
+                    portContainer.classList.remove('hidden');
+                    urlContainer.classList.add('hidden');
+                }
+            });
+            
+            customUrlRadio.addEventListener('change', function() {
+                if (this.checked) {
+                    urlContainer.classList.remove('hidden');
+                    portContainer.classList.add('hidden');
+                }
+            });
+            
+            // Add parameter row
+            document.getElementById('add-param').addEventListener('click', function() {
+                addRow('params-table');
+            });
+            
+            // Add header row
+            document.getElementById('add-header').addEventListener('click', function() {
+                addRow('headers-table');
+            });
+            
+            // Remove row functionality
+            document.addEventListener('click', function(e) {
+                if (e.target && e.target.classList.contains('remove-row')) {
+                    const row = e.target.closest('tr');
+                    if (row.parentElement.children.length > 1) {
+                        row.remove();
+                    } else {
+                        // Clear inputs instead of removing the last row
+                        const inputs = row.querySelectorAll('input');
+                        inputs.forEach(input => {
+                            input.value = '';
+                        });
+                    }
+                }
+            });
+            
+            // Send request functionality
+            document.getElementById('send-request').addEventListener('click', sendRequest);
+            
+            function addRow(tableId) {
+                const table = document.getElementById(tableId);
+                const tbody = table.querySelector('tbody');
+                const newRow = document.createElement('tr');
+                
+                if (tableId === 'params-table') {
+                    newRow.innerHTML = `
+                        <td><input type="text" class="param-key" placeholder="key"></td>
+                        <td><input type="text" class="param-value" placeholder="value"></td>
+                        <td><button class="remove-row">Remove</button></td>
+                    `;
+                } else if (tableId === 'headers-table') {
+                    newRow.innerHTML = `
+                        <td><input type="text" class="header-key" placeholder="key"></td>
+                        <td><input type="text" class="header-value" placeholder="value"></td>
+                        <td><button class="remove-row">Remove</button></td>
+                    `;
+                }
+                
+                tbody.appendChild(newRow);
+            }
+            
+            function sendRequest() {
+                // Get request details
+                const method = document.getElementById('request-method').value;
+                let url = '';
+                
+                if (document.getElementById('localhost').checked) {
+                    const port = document.getElementById('port-number').value || '3000';
+                    url = `http://localhost:${port}`;
+                } else {
+                    url = document.getElementById('custom-url-input').value;
+                    if (!url) {
+                        showError('Please enter a URL');
+                        return;
+                    }
+                }
+                
+                // Get query parameters
+                const params = new URLSearchParams();
+                const paramRows = document.querySelectorAll('#params-table tbody tr');
+                paramRows.forEach(row => {
+                    const key = row.querySelector('.param-key').value.trim();
+                    const value = row.querySelector('.param-value').value.trim();
+                    
+                    if (key && value) {
+                        params.append(key, value);
+                    }
+                });
+                
+                if (params.toString()) {
+                    url += '?' + params.toString();
+                }
+                
+                // Get headers
+                const headers = {};
+                const headerRows = document.querySelectorAll('#headers-table tbody tr');
+                headerRows.forEach(row => {
+                    const key = row.querySelector('.header-key').value.trim();
+                    const value = row.querySelector('.header-value').value.trim();
+                    
+                    if (key && value) {
+                        headers[key] = value;
+                    }
+                });
+                
+                // Get request body
+                let body = null;
+                if (method !== 'GET' && method !== 'HEAD') {
+                    const bodyText = document.getElementById('request-body').value.trim();
+                    if (bodyText) {
+                        body = bodyText;
+                    }
+                }
+                
+                // Clear previous response
+                document.getElementById('status').textContent = 'Loading...';
+                document.getElementById('time').textContent = '';
+                document.getElementById('response-body-container').textContent = 'Fetching...';
+                document.getElementById('response-headers-container').textContent = '';
+                document.getElementById('cookies-container').textContent = '';
+                document.getElementById('raw-html-container').textContent = '';
+                
+                // Start time measurement
+                const startTime = new Date();
+                
+                // Make the request
+                fetch(url, {
+                    method: method,
+                    headers: headers,
+                    body: body,
+                    credentials: 'include' // Include cookies
+                })
+                .then(response => {
+                    const endTime = new Date();
+                    const timeTaken = (endTime - startTime) + 'ms';
+                    document.getElementById('time').textContent = timeTaken;
+                    
+                    // Display status
+                    const statusElement = document.getElementById('status');
+                    statusElement.textContent = `${response.status} ${response.statusText}`;
+                    
+                    if (response.ok) {
+                        statusElement.classList.add('success');
+                        statusElement.classList.remove('error');
+                    } else {
+                        statusElement.classList.add('error');
+                        statusElement.classList.remove('success');
+                    }
+                    
+                    // Display headers
+                    const headersContainer = document.getElementById('response-headers-container');
+                    let headersText = '';
+                    response.headers.forEach((value, key) => {
+                        headersText += `${key}: ${value}\n`;
+                    });
+                    headersContainer.textContent = headersText || 'No headers';
+                    
+                    // Check for cookies
+                    const cookiesContainer = document.getElementById('cookies-container');
+                    const cookies = document.cookie;
+                    
+                    if (cookies) {
+                        let cookiesHtml = '';
+                        cookies.split(';').forEach(cookie => {
+                            cookiesHtml += `<div class="cookie-item">${cookie.trim()}</div>`;
+                        });
+                        cookiesContainer.innerHTML = cookiesHtml;
+                    } else {
+                        cookiesContainer.textContent = 'No cookies found';
+                    }
+                    
+                    // Detect content type
+                    const contentType = response.headers.get('content-type') || '';
+                    
+                    // Clone the response for different processing
+                    return Promise.all([
+                        response.clone().text(),
+                        contentType,
+                        response.status
+                    ]);
+                })
+                .then(([text, contentType, status]) => {
+                    const responseBodyContainer = document.getElementById('response-body-container');
+                    const rawHtmlContainer = document.getElementById('raw-html-container');
+                    
+                    // Handle HTML response
+                    if (contentType.includes('text/html')) {
+                        // Show HTML tab
+                        rawHtmlContainer.textContent = text;
+                        
+                        // Try to parse as JSON for the body tab, otherwise show as text
+                        try {
+                            const jsonData = JSON.parse(text);
+                            responseBodyContainer.textContent = JSON.stringify(jsonData, null, 2);
+                        } catch (e) {
+                            // Show formatted in body tab
+                            responseBodyContainer.textContent = text;
+                        }
+                    } 
+                    // Handle JSON response
+                    else if (contentType.includes('application/json')) {
+                        try {
+                            const jsonData = JSON.parse(text);
+                            responseBodyContainer.textContent = JSON.stringify(jsonData, null, 2);
+                            rawHtmlContainer.textContent = 'Not HTML content';
+                        } catch (e) {
+                            responseBodyContainer.textContent = text;
+                            rawHtmlContainer.textContent = 'Not HTML content';
+                        }
+                    } 
+                    // Handle other responses
+                    else {
+                        responseBodyContainer.textContent = text;
+                        rawHtmlContainer.textContent = 'Not HTML content';
+                    }
+                })
+                .catch(error => {
+                    const endTime = new Date();
+                    const timeTaken = (endTime - startTime) + 'ms';
+                    document.getElementById('time').textContent = timeTaken;
+                    
+                    const statusElement = document.getElementById('status');
+                    statusElement.textContent = 'Error';
+                    statusElement.classList.add('error');
+                    statusElement.classList.remove('success');
+                    
+                    document.getElementById('response-body-container').textContent = `Error: ${error.message}`;
+                    document.getElementById('response-headers-container').textContent = 'No headers';
+                    document.getElementById('cookies-container').textContent = 'No cookies found';
+                    document.getElementById('raw-html-container').textContent = 'No HTML content';
+                });
+            }
+            
+            function showError(message) {
+                const statusElement = document.getElementById('status');
+                statusElement.textContent = 'Error';
+                statusElement.classList.add('error');
+                statusElement.classList.remove('success');
+                
+                document.getElementById('response-body-container').textContent = message;
+            }
+        });
+    </script>
+</body>
+</html>
